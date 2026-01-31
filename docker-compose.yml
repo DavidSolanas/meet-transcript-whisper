@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # FastAPI application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN}
+      - REDIS_URL=redis://redis:6379/0
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_JSON=true
+      - PRELOAD_MODELS=${PRELOAD_MODELS:-false}
+    volumes:
+      - upload_data:/tmp/meet-transcriber
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # Celery worker for async processing
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A src.worker.celery_app worker --loglevel=INFO --concurrency=1
+    environment:
+      - HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN}
+      - REDIS_URL=redis://redis:6379/0
+      - WHISPER_MODEL=${WHISPER_MODEL:-base}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_JSON=true
+    volumes:
+      - upload_data:/tmp/meet-transcriber
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Redis for task queue and result backend
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  upload_data:

@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+ENV
+env
+.eggs
+*.egg-info
+*.egg
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov
+.tox
+
+# Docs
+docs/_build
+
+# Misc
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Local env files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Uploads and temp files
+uploads/
+tmp/
+
+# Lock files (we use pyproject.toml)
+uv.lock
