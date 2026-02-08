@@ -1,8 +1,8 @@
 """API routes for transcription endpoints."""
 
+import datetime
 import tempfile
 import uuid
-from datetime import datetime
 from pathlib import Path
 
 import redis
@@ -137,7 +137,7 @@ async def create_transcription(
     job = JobData(
         job_id=job_id,
         status=JobStatus.PENDING,
-        created_at=datetime.utcnow(),
+        created_at=datetime.datetime.now(datetime.UTC),
         language=language,
         min_speakers=min_speakers,
         max_speakers=max_speakers,

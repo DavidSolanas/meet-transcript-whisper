@@ -1,6 +1,6 @@
 """Celery tasks for transcription processing."""
 
-from datetime import datetime
+import datetime
 from pathlib import Path
 
 import redis
@@ -28,6 +28,7 @@ def get_job(job_id: str) -> JobData | None:
     client = get_redis_client()
     data = client.get(f"job:{job_id}")
     if data:
+        # model_validate_json is BaseModel method to parse JSON string
         return JobData.model_validate_json(data)
     return None
 
@@ -116,7 +117,7 @@ def process_transcription(self, job_id: str) -> dict:
         job.status = JobStatus.COMPLETED
         job.progress = 100.0
         job.message = "Transcription completed"
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.datetime.now(datetime.UTC)
         job.result = result_data
         save_job(job)
 
