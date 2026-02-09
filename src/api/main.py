@@ -1,11 +1,14 @@
 """FastAPI application factory and configuration."""
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import structlog
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.api.routes import router
 from src.core.config import get_settings
@@ -63,6 +66,16 @@ def create_app() -> FastAPI:
 
     # Include routers
     app.include_router(router)
+
+    # Serve static files for the web UI
+    frontend_dir = Path(__file__).parent.parent / "frontend"
+    if frontend_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+
+        @app.get("/", include_in_schema=False)
+        async def serve_frontend():
+            """Serve the web UI."""
+            return FileResponse(frontend_dir / "index.html")
 
     return app
 

@@ -8,6 +8,7 @@ A production-ready REST API for transcribing audio recordings with automatic spe
 - **Speaker Diarization** — Identifies and labels different speakers using pyannote.audio
 - **Word-Level Timestamps** — Precise timing for each word in the transcript
 - **Multiple Output Formats** — JSON, SRT, and WebVTT support
+- **Web UI** — Modern, responsive interface for easy file uploads and transcription viewing
 - **Async Processing** — Celery + Redis for handling long-running transcription jobs
 - **GPU Acceleration** — CUDA support for faster processing
 - **Production Ready** — Docker deployment, structured logging, health checks
@@ -93,6 +94,26 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 # Terminal 3: Start the Celery worker
 celery -A src.worker.celery_app worker --loglevel=INFO
 ```
+
+## Web Interface
+
+The application includes a modern web UI accessible at `http://localhost:8000/` after starting the server.
+
+### Features
+
+- **Drag & Drop Upload** — Simply drag audio files into the browser
+- **Real-time Progress** — Watch transcription progress as it processes
+- **Speaker Colors** — Each speaker is highlighted with a distinct color
+- **Dark/Light Mode** — Toggle between themes based on preference
+- **Export Options** — Download transcripts as SRT or VTT subtitles
+- **Responsive Design** — Works on desktop, tablet, and mobile devices
+
+### Configuration Options
+
+The UI provides options to:
+- Select target language or use auto-detection
+- Enable/disable speaker diarization
+- Set minimum and maximum expected speakers
 
 ## API Reference
 
@@ -239,6 +260,10 @@ meet-transcript-whisper/
 │   ├── core/                # Core components
 │   │   ├── config.py        # Pydantic settings
 │   │   └── models.py        # Data models
+│   ├── frontend/            # Web UI
+│   │   ├── index.html       # Main page
+│   │   ├── styles.css       # Styling
+│   │   └── app.js           # JavaScript logic
 │   ├── services/            # Business logic
 │   │   ├── transcription.py # Whisper ASR service
 │   │   ├── diarization.py   # Speaker diarization service
