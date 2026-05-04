@@ -3,6 +3,7 @@
 class TranscriberApp {
     constructor() {
         this.pollingIntervals = new Map();
+        this.stagedFile = null;
         this.init();
     }
 
@@ -15,6 +16,7 @@ class TranscriberApp {
     cacheElements() {
         this.uploadArea = document.getElementById('uploadArea');
         this.fileInput = document.getElementById('fileInput');
+        this.startTranscriptionBtn = document.getElementById('startTranscriptionBtn');
         this.messagesContainer = document.getElementById('messages');
         this.welcomeScreen = document.getElementById('welcomeScreen');
         this.themeToggle = document.getElementById('themeToggle');
@@ -29,6 +31,10 @@ class TranscriberApp {
         // File upload events
         this.uploadArea.addEventListener('click', () => this.fileInput.click());
         this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        this.startTranscriptionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.beginUpload();
+        });
 
         // Drag and drop
         this.uploadArea.addEventListener('dragover', (e) => this.handleDragOver(e));
@@ -88,21 +94,20 @@ class TranscriberApp {
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            this.uploadFile(files[0]);
+            this.stageFile(files[0]);
         }
     }
 
     handleFileSelect(e) {
         const file = e.target.files[0];
         if (file) {
-            this.uploadFile(file);
+            this.stageFile(file);
         }
         // Reset input so same file can be selected again
         this.fileInput.value = '';
     }
 
-    // File Upload
-    async uploadFile(file) {
+    stageFile(file) {
         // Validate file type
         const validExtensions = ['.wav', '.mp3', '.m4a', '.flac', '.ogg', '.webm', '.wma', '.aac'];
         const fileExt = '.' + file.name.split('.').pop().toLowerCase();
@@ -112,7 +117,20 @@ class TranscriberApp {
             return;
         }
 
-        // Hide welcome screen
+        this.stagedFile = file;
+        this.startTranscriptionBtn.style.display = 'block';
+    }
+
+    // File Upload
+    async beginUpload() {
+        const file = this.stagedFile;
+        if (!file) {
+            return;
+        }
+
+        this.stagedFile = null;
+        this.startTranscriptionBtn.style.display = 'none';
+
         this.welcomeScreen.classList.add('hidden');
 
         // Create message element
