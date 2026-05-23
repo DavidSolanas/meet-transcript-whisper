@@ -2,7 +2,7 @@
 
 import datetime
 
-from src.core.models import JobData, JobStatus
+from src.core.models import JobCreatedResponse, JobData, JobStatus
 
 
 class TestHealthEndpoint:
@@ -26,6 +26,16 @@ class TestHealthEndpoint:
 
         assert "whisper" in data["models_loaded"]
         assert "diarization" in data["models_loaded"]
+
+
+class TestResponseModels:
+    """Tests for API response model defaults."""
+
+    def test_created_response_default_timestamp_is_utc(self):
+        """Created response defaults should include an explicit UTC timezone."""
+        response = JobCreatedResponse(job_id="test-job-123")
+
+        assert response.created_at.tzinfo is datetime.UTC
 
 
 class TestTranscriptionEndpoints:
