@@ -47,6 +47,3 @@ Thumbs.db
 # Uploads and temp files
 uploads/
 tmp/
-
-# Lock files (we use pyproject.toml)
-uv.lock

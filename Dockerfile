@@ -20,12 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install uv
 
 # Copy dependency files
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock ./
 
-# Create virtual environment and install dependencies
+# Create virtual environment and install locked dependencies
 RUN uv venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-RUN uv pip install -e .
+ENV PATH="/opt/venv/bin:$PATH" \
+    UV_PROJECT_ENVIRONMENT="/opt/venv"
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Stage 2: Runtime stage
 FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04 AS runtime
