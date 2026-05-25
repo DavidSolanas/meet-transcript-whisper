@@ -50,11 +50,15 @@ async def health_check():
         client = get_redis_client()
         client.ping()
         redis_connected = True
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning(
+            "Redis health check failed",
+            error=str(exc),
+            error_type=type(exc).__name__,
+        )
 
     return HealthResponse(
-        status="healthy",
+        status="healthy" if redis_connected else "degraded",
         version="0.1.0",
         models_loaded={
             "whisper": TranscriptionService.is_loaded(),
