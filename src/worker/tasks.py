@@ -2,6 +2,7 @@
 
 import datetime
 from pathlib import Path
+from typing import Any
 
 import redis
 import structlog
@@ -52,6 +53,30 @@ def update_job_progress(job_id: str, progress: float, message: str | None = None
         if message:
             job.message = message
         save_job(job)
+
+
+def update_job_failure_for_retry(task: Any, job_id: str, error: Exception) -> bool:
+    """Update failed task state and return whether Celery should retry it."""
+    retries = getattr(getattr(task, "request", None), "retries", 0)
+    max_retries = getattr(task, "max_retries", 0)
+    can_retry = max_retries is None or retries < max_retries
+
+    job = get_job(job_id)
+    if job:
+        if can_retry:
+            job.status = JobStatus.PROCESSING
+            job.error = None
+            if max_retries is None:
+                job.message = f"Retrying transcription (attempt {retries + 1})"
+            else:
+                job.message = f"Retrying transcription ({retries + 1}/{max_retries})"
+        else:
+            job.status = JobStatus.FAILED
+            job.error = str(error)
+            job.message = "Transcription failed"
+        save_job(job)
+
+    return can_retry
 
 
 @celery_app.task(bind=True, name="transcription.process")
@@ -134,15 +159,9 @@ def process_transcription(self, job_id: str) -> dict:
     except Exception as e:
         logger.error("Transcription task failed", job_id=job_id, error=str(e))
 
-        # Update job with error
-        job = get_job(job_id)
-        if job:
-            job.status = JobStatus.FAILED
-            job.error = str(e)
-            job.message = "Transcription failed"
-            save_job(job)
+        if update_job_failure_for_retry(self, job_id, e):
+            raise self.retry(exc=e)
 
-        # Re-raise for Celery retry mechanism
         raise
 
     finally:
