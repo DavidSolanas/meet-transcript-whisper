@@ -1,13 +1,13 @@
 """Pydantic models for API requests, responses, and internal data structures."""
 
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     """Status of a transcription job."""
 
     PENDING = "pending"
@@ -16,7 +16,7 @@ class JobStatus(str, Enum):
     FAILED = "failed"
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     """Supported output formats."""
 
     JSON = "json"
