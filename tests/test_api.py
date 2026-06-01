@@ -27,6 +27,23 @@ class TestHealthEndpoint:
         assert "whisper" in data["models_loaded"]
         assert "diarization" in data["models_loaded"]
 
+    def test_health_check_reports_degraded_when_redis_fails(self, client, monkeypatch):
+        """Health check should expose Redis connectivity failures."""
+        from src.api import routes
+
+        class FailingRedis:
+            def ping(self):
+                raise ConnectionError("redis unavailable")
+
+        monkeypatch.setattr(routes, "get_redis_client", lambda: FailingRedis())
+
+        response = client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "degraded"
+        assert data["redis_connected"] is False
+
 
 class TestResponseModels:
     """Tests for API response model defaults."""
