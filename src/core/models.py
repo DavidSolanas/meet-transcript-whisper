@@ -1,6 +1,6 @@
 """Pydantic models for API requests, responses, and internal data structures."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -80,7 +80,7 @@ class JobCreatedResponse(BaseModel):
     job_id: str
     status: JobStatus = JobStatus.PENDING
     message: str = "Transcription job queued"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class JobStatusResponse(BaseModel):
