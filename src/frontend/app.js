@@ -207,10 +207,15 @@ class TranscriberApp {
 
     // Polling for Job Status
     startPolling(jobId, messageId) {
+        let consecutiveErrors = 0;
+        const maxErrors = 5;
+
         const pollInterval = setInterval(async () => {
             try {
                 const response = await fetch(`/transcribe/${jobId}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
+                consecutiveErrors = 0;
 
                 this.updateProgress(messageId, data);
 
@@ -224,7 +229,13 @@ class TranscriberApp {
                     this.showErrorInMessage(messageId, data.error || 'Transcription failed');
                 }
             } catch (error) {
+                consecutiveErrors++;
                 console.error('Polling error:', error);
+                if (consecutiveErrors >= maxErrors) {
+                    clearInterval(pollInterval);
+                    this.pollingIntervals.delete(messageId);
+                    this.showErrorInMessage(messageId, 'Lost connection to server. Please refresh and try again.');
+                }
             }
         }, 1000);
 
