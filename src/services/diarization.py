@@ -37,7 +37,7 @@ class DiarizationService:
 
                     cls._pipeline = Pipeline.from_pretrained(
                         settings.diarization_model,
-                        use_auth_token=settings.huggingface_access_token,
+                        token=settings.huggingface_access_token,
                     )
                     cls._pipeline.to(device)
 
